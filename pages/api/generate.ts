@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
-import formidable from 'formidable-serverless';
+import formidable from 'formidable';
 
 export const config = {
   api: {
@@ -10,18 +10,17 @@ export const config = {
 };
 
 function getOptionLabel(i: number) {
-  return String.fromCharCode(65 + i);
+  return String.fromCharCode(65 + i); // A, B, C, D
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const form = new formidable.IncomingForm();
-  form.uploadDir = "/tmp";
-  form.keepExtensions = true;
+  const form = formidable({ multiples: false, uploadDir: "/tmp", keepExtensions: true });
 
   form.parse(req, async (err, fields, files) => {
     if (err || !files.file) return res.status(400).send("Upload failed.");
 
-    const rawData = fs.readFileSync(files.file.filepath, "utf8");
+    const uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
+    const rawData = fs.readFileSync(uploadedFile.filepath, "utf8");
     const json = JSON.parse(rawData);
 
     const templatePath = path.join(process.cwd(), "public", "template.html");
@@ -48,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 </div>`;
     }).join("");
 
-    html = html.replace(/<div class="question-card">[\s\S]*?<\/div>(\s*<!-- END -->)?/, injected);
+    html = html.replace(/<div class="question-card">[\\s\\S]*?<\/div>(\\s*<!-- END -->)?/, injected);
 
     res.setHeader("Content-Type", "text/html");
     res.send(html);
