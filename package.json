@@ -8,7 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "formidable-serverless": "^0.1.1",
+    "formidable": "^3.5.0",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest"
